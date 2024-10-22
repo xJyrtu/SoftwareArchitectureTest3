@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人通讯录</title>
+    <script>
+        async function loadContacts() {
+            const response = await fetch('/contacts');
+            const contacts = await response.json();
+            const contactList = document.getElementById('contactList');
+            contactList.innerHTML = '';
+            contacts.data.forEach(contact => {
+                const li = document.createElement('li');
+                li.textContent = `姓名：${contact.name}，电话：${contact.phone}，地址：${contact.addr}`;
+                contactList.appendChild(li);
+            });
+        }
+
+        async function addContact() {
+            const name = document.getElementById('name').value;
+            const phone = document.getElementById('phone').value;
+            const addr = document.getElementById('addr').value;
+            await fetch('/contacts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone, addr })
+            });
+            loadContacts();
+        }
+
+        async function deleteContact() {
+            const name = document.getElementById('deleteName').value;
+            const res= await fetch(`/contacts?name=${name}`, { method: 'DELETE' });
+            if(res.data==false)
+                alert("删除失败");
+            loadContacts();
+        }
+
+        async function updateContact() {
+            const oldName = document.getElementById('oldName').value;
+            const newName = document.getElementById('newName').value;
+            const newPhone = document.getElementById('newPhone').value;
+            const newAddr = document.getElementById('newAddr').value;
+
+            const res = await fetch(`/contacts?oldName=${oldName}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName, phone: newPhone, addr: newAddr })
+            });
+            const responseData = await res.json();
+            if (!responseData.success) {
+                alert("更新失败");
+            } else {
+                alert("更新成功");
+            }
+            loadContacts(); // 刷新联系人列表
+        }
+    </script>
+</head>
+<body onload="loadContacts()">
+<h1>个人通讯录</h1>
+<h2>添加联系人</h2>
+<input id="name" placeholder="姓名" />
+<input id="phone" placeholder="电话" />
+<input id="addr" placeholder="地址" />
+<button onclick="addContact()">添加</button>
+
+<h2>删除联系人</h2>
+<input id="deleteName" placeholder="姓名" />
+<button onclick="deleteContact()">删除</button>
+
+<h2>更新联系人</h2>
+<input id="oldName" placeholder="旧姓名" />
+<input id="newName" placeholder="新姓名" />
+<input id="newPhone" placeholder="新电话" />
+<input id="newAddr" placeholder="新地址" />
+<button onclick="updateContact()">更新</button>
+
+<h2>联系人列表</h2>
+<ul id="contactList"></ul>
+</body>
+</html>
