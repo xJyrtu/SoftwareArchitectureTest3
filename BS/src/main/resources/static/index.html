@@ -6,13 +6,13 @@
     <title>个人通讯录</title>
     <script>
         async function loadContacts() {
-            const response = await fetch('/contacts');
-            const contacts = await response.json();
+            const response = await fetch('/contactDAos');
+            const contactDAos = await response.json();
             const contactList = document.getElementById('contactList');
             contactList.innerHTML = '';
-            contacts.data.forEach(contact => {
+            contactDAos.data.forEach(contactDao => {
                 const li = document.createElement('li');
-                li.textContent = `姓名：${contact.name}，电话：${contact.phone}，地址：${contact.addr}`;
+                li.textContent = `姓名：${contactDao.name}，电话：${contactDao.phone}，地址：${contactDao.addr}`;
                 contactList.appendChild(li);
             });
         }
@@ -21,7 +21,7 @@
             const name = document.getElementById('name').value;
             const phone = document.getElementById('phone').value;
             const addr = document.getElementById('addr').value;
-            await fetch('/contacts', {
+            await fetch('/contactDAos', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name, phone, addr })
@@ -31,7 +31,7 @@
 
         async function deleteContact() {
             const name = document.getElementById('deleteName').value;
-            const res= await fetch(`/contacts?name=${name}`, { method: 'DELETE' });
+            const res= await fetch(`/contactDAos?name=${name}`, { method: 'DELETE' });
             if(res.data==false)
                 alert("删除失败");
             loadContacts();
@@ -43,17 +43,12 @@
             const newPhone = document.getElementById('newPhone').value;
             const newAddr = document.getElementById('newAddr').value;
 
-            const res = await fetch(`/contacts?oldName=${oldName}`, {
+            const res = await fetch(`/contactDAos?oldName=${oldName}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ name: newName, phone: newPhone, addr: newAddr })
             });
-            const responseData = await res.json();
-            if (!responseData.success) {
-                alert("更新失败");
-            } else {
-                alert("更新成功");
-            }
+
             loadContacts(); // 刷新联系人列表
         }
     </script>

@@ -1,64 +1,112 @@
 package client;
 
 
-import java.io.*;
-import java.net.*;
+import service.ContactServer;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 public class ContactClient {
-    public static void main(String[] args) {
-        try (Socket socket = new Socket("localhost", 12345);
-             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
-             PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
-             BufferedReader userInput = new BufferedReader(new InputStreamReader(System.in, "UTF-8"))) {
+    private ContactServer server = new ContactServer();
+    private JFrame frame;
+    private JTextArea textArea;
 
-            String command;
-            while (true) {
-                System.out.println("请输入命令（ADD, SHOW, DELETE, UPDATE, EXIT）：");
-                command = userInput.readLine().toUpperCase();  // 转换为大写
-                if (command.equals("EXIT")) {
-                    break;
-                }
-                if (command.equals("ADD")) {
-                    System.out.println("请输入姓名：");
-                    String name = userInput.readLine();
-                    System.out.println("请输入电话：");
-                    String phone = userInput.readLine();
-                    System.out.println("请输入地址：");
-                    String addr = userInput.readLine();
-                    out.println("ADD;" + name + ";" + phone + ";" + addr);
-                    System.out.println(in.readLine());  // 显示成功提示
-                } else if (command.equals("SHOW")) {
-                    out.println("SHOW");
-                    String response = in.readLine();
-                    System.out.println("联系人列表：");
-                    System.out.println(response); // 展示联系人
-                } else if (command.equals("DELETE")) {
-                    System.out.println("请输入要删除的姓名：");
-                    String name = userInput.readLine();
-                    out.println("DELETE;" + name);
-                    System.out.println(in.readLine());  // 显示成功提示
-                } else if (command.equals("UPDATE")) {
-                    System.out.println("请输入要更新的旧姓名：");
-                    String oldName = userInput.readLine();
-                    // 显示当前联系人信息
-                    System.out.println("当前联系人信息：");
-                    out.println("SHOW");
-                    System.out.println(in.readLine());
+    public ContactClient() {
+        frame = new JFrame("个人通讯录系统");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(600, 400);
 
-                    System.out.println("请输入新姓名：");
-                    String newName = userInput.readLine();
-                    System.out.println("请输入新电话：");
-                    String newPhone = userInput.readLine();
-                    System.out.println("请输入新地址：");
-                    String newAddr = userInput.readLine();
-                    out.println("UPDATE;" + oldName + ";" + newName + ";" + newPhone + ";" + newAddr);
-                    System.out.println(in.readLine());  // 显示成功提示
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(5, 2));
+
+        JLabel nameLabel = new JLabel("姓名：");
+        JTextField nameField = new JTextField();
+        JLabel addrLabel = new JLabel("住址：");
+        JTextField addrField = new JTextField();
+        JLabel phoneLabel = new JLabel("电话：");
+        JTextField phoneField = new JTextField();
+
+        JButton addButton = new JButton("添加");
+        JButton queryButton = new JButton("查询");
+        JButton deleteButton = new JButton("删除");
+        JButton updateButton = new JButton("修改");
+
+        panel.add(nameLabel);
+        panel.add(nameField);
+        panel.add(addrLabel);
+        panel.add(addrField);
+        panel.add(phoneLabel);
+        panel.add(phoneField);
+        panel.add(addButton);
+        panel.add(queryButton);
+        panel.add(deleteButton);
+        panel.add(updateButton);
+
+        textArea = new JTextArea();
+        textArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(textArea);
+
+        frame.getContentPane().add(panel, BorderLayout.NORTH);
+        frame.getContentPane().add(scrollPane, BorderLayout.CENTER);
+
+        addButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String name = nameField.getText();
+                String addr = addrField.getText();
+                String phone = phoneField.getText();
+                if (!name.isEmpty() && !addr.isEmpty() && !phone.isEmpty()) {
+                    server.addContact(new Contact(name, addr, phone));
+                    textArea.append("已添加联系人：" + name + "\n");
                 } else {
-                    System.out.println("无效的命令。");
+                    textArea.append("请填写完整的信息！\n");
                 }
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        });
+
+        queryButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String name = nameField.getText();
+                Contact contact = server.findContact(name);
+                if (contact != null) {
+                    textArea.append("查询结果：" + contact + "\n");
+                } else {
+                    textArea.append("未找到联系人：" + name + "\n");
+                }
+            }
+        });
+
+        deleteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String name = nameField.getText();
+                server.deleteContact(name);
+                textArea.append("已删除联系人：" + name + "\n");
+            }
+        });
+
+        updateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String name = nameField.getText();
+                String addr = addrField.getText();
+                String phone = phoneField.getText();
+                if (!name.isEmpty() && !addr.isEmpty() && !phone.isEmpty()) {
+                    server.updateContact(name, new Contact(name, addr, phone));
+                    textArea.append("已修改联系人：" + name + "\n");
+                } else {
+                    textArea.append("请填写完整的信息！\n");
+                }
+            }
+        });
+
+        frame.setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        new ContactClient();
     }
 }

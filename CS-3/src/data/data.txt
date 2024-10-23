@@ -1,3 +1,0 @@
-se,sd,sa
-sa,sa,x
-sa,sa,s
